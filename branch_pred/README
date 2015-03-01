@@ -1,0 +1,9 @@
+Real branch predictors work on a window of fetch data.
+
+I don't really care, was planning on doing a BTB loopup 
+on each /instruction/. This is interesting. This can either 
+be achieved--for x86--by storing the decoded length of each instruction
+and doing a PC+/variable length/ for each instruction... which is cheating. 
+Or by doing a BTB lookup on EVERY BYTE. 
+
+Now that I think of it, I should implement it as a fixed window with offsets.
