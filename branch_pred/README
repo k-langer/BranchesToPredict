@@ -1,9 +1,3 @@
 Real branch predictors work on a window of fetch data.
 
-I don't really care, was planning on doing a BTB loopup 
-on each /instruction/. This is interesting. This can either 
-be achieved--for x86--by storing the decoded length of each instruction
-and doing a PC+/variable length/ for each instruction... which is cheating. 
-Or by doing a BTB lookup on EVERY BYTE. 
-
-Now that I think of it, I should implement it as a fixed window with offsets.
+For each fetch window it is important that we can sucessfully fetch the next window, sequential or jumped. We do this by storing branch targets and jumping to them based on history. I think I am going to do one BTB entry per fetch window and up to two branches per fetch window. Compilers pad branch targets with NOPs right? That is the sensible way to achieve high fetch bandwith, but regardless. TODO, explore >2 branches per window...
