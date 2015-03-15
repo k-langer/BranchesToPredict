@@ -2,43 +2,23 @@
 #include "decode.h"
 #include "readva.h" 
 
-char * readAndParse(FILE *inFilePtr, int *PA, char **instr) { 
-        char *statusString;
-        char lineString[MAXLINELENGTH];
-        char *PAstr; 
-        statusString = fgets(lineString, MAXLINELENGTH, inFilePtr);
-
-        if (statusString) {
-            //PAstr = (char *)strtok( "0x", " ");    
-            //*instr = (char *)strtok(" ", "\n");    
-            //*PA = (int)strtol( PAstr, NULL,  16);    
-        }
-        return statusString; 
-
-}
-
 int main() {
     //Parse trace 
     char * inFileString = "trace.txt"; 
     FILE *inFilePtr = fopen(inFileString, "r");
     istream_t * VAs = readimem(inFilePtr); 
+    unsigned long long pc;
+    char * instr;  
+    int num = 3104; 
+    printf("%d\n",btb_index(num).index);
+    printf("%d\n",btb_index(num).tag);
     while (VAs) {
-        printf("%llx %s\n",VAs->pc,VAs->instr); 
+        if (VAs->pc != pc) {
+     //       printf("%llx %s\n",VAs->pc,VAs->instr); 
+        }
+        instr = VAs->instr; 
+        pc = VAs->pc+VAs->ilen; 
         VAs = VAs->next; 
     }
-    /*
-    char *inFileString = "trace.txt";
-    FILE *inFilePtr = fopen(inFileString, "r");
-    if (inFilePtr==NULL) { return 0; } 
-    char *instr; 
-    int PA; 
-    char * neof = (char*)1;
-    while (neof) {
-        neof = readAndParse(inFilePtr, &PA, &instr); 
-        printf("%d\n",PA);
-    } 
-    */ 
-    //init BTB
-    //feedback from decoders
     return 0;
 }

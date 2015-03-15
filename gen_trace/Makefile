@@ -14,8 +14,12 @@ $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(DEBUG)
 
 run: 
-	gdb -batch -x run.gdb RunTrace 2> /dev/null | grep "=>" | \
-		awk '{print $$2," ",$$4}' | \
-		gzip > trace.gz
+	gdb -batch -q -x instr_length.py -x run.gdb RunTrace 2> /dev/null | \
+		./parse.pl | \
+        gzip > trace.gz
+
+#	gdb -batch -q -x instr_length.py -x run.gdb RunTrace 2> /dev/null | grep "=>" | \
+#		awk '{print $$2," ",$$4}' | \
+#		gzip > trace.gz
 clean:  
 	rm -f *.o RunTrace trace.gz
