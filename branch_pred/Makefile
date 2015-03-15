@@ -6,6 +6,7 @@ TARGET= BranchPred
 _OBJS = btb.o \
 	decode.o \
     readva.o \
+    engine.o \
     main.o
  
 OBJS = $(patsubst %,$(OUTDIR)/%,$(_OBJS))

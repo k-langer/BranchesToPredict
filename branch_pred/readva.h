@@ -9,6 +9,7 @@ typedef struct istream
 { 
     unsigned long long pc;
     char * instr;  
+    int ilen; 
     struct istream *  next; 
 } istream_t; 
 
