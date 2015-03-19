@@ -15,5 +15,6 @@ typedef int bool;
 const char * branchInstr;   
 int decode_lengthDec(char * instr); 
 bool decode_branchFound(char * instr); 
+bool decode_branchMissed(istream_t * previnstr, unsigned long long pc); 
 
 #endif
