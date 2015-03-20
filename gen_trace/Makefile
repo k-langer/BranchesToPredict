@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc -m32
 CFLAGS=-std=gnu99 -Wno-unused-result -lm
 WARNING=-Wall 
 DEBUG=-g -O0

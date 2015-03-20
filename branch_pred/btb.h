@@ -2,6 +2,7 @@
 #define __btb__h
 #include<stdio.h>
 #include<stdlib.h>
+#include"readva.h"
 #include "math.h"
 #define PREDWIND 5
 #define TRUE 1
@@ -15,8 +16,8 @@ typedef struct entry {
     unsigned long long tag; 
 } entry_t;
 typedef struct btb_index {
-    int index;
-    int offset;  
+    unsigned long long index;
+    unsigned long long offset;  
     unsigned long long tag; 
 } btb_index_t; 
  
@@ -36,6 +37,7 @@ void btb_train(entry_t * btb, btb_index_t idx, unsigned long long target);
 btb_index_t btb_index(unsigned long long pc); 
 entry_t btb_read(entry_t * btb, unsigned long long pc);
 unsigned long long btb_readTgt(entry_t btbEntry, unsigned long long pc);
+unsigned long long btb_nextPc(entry_t * btb, istream_t instr); 
 
 static inline unsigned int ilog2(const unsigned int x) {
   unsigned int y;
