@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=gnu99 -Wno-unused-result -lm -g -O3
+CFLAGS=-std=gnu99 -Wno-unused-result -lm -g 
 WARNING=-Wall
 OUTDIR = build
 TARGET= BranchPred

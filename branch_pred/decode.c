@@ -20,6 +20,7 @@ bool decode_branchFound(char * instr) {
     branchFound |= (instr[0] == 'c' && instr[1] == 'a' && instr[2] == 'l'); 
     branchFound |= (instr[0] == 'r' && instr[1] == 'e' && instr[2] == 't'); 
     branchFound |= (instr[0] == 'r' && instr[1] == 'e' && instr[2] == 'p'); 
+    //branchFound |= (instr[0] == 's' && instr[1] == 'y' && instr[2] == 's'); 
     return branchFound; 
 }
 bool decode_branchMissed(istream_t * previnstr, unsigned long long pc) {

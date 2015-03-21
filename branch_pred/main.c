@@ -10,5 +10,6 @@ int main() {
 
     entry_t * btb = btb_init(10);
     run(VAs,btb);    
+    btb_printDebug();
     return 0;
 }
