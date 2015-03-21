@@ -6,12 +6,12 @@ void run(istream_t * VAs, entry_t * btb) {
     int len;
     unsigned long long branches = 0, mispreds = 0;  
     while (VAs->next) {
-        btb_index_t idx = btb_index(predpc-len);
+        btb_index_t idx = btb_index(prevpc);
         //if ( decode_branchFound(instr) && nextpc != predpc) {
         if ( nextpc != prevpc && nextpc != predpc) {
-            if (!decode_branchFound(instr)) { printf("%s\n",instr); }
+            //if (!decode_branchFound(instr)) { printf("%llx %s\n",prevpc,instr); }
             //Mispredict
-            btb_train(btb,idx,nextpc);
+            btb_train(btb,idx,nextpc,instr);
             //printf("BRANCH %llx %d %s\n",nextpc,len,instr); 
             mispreds++; 
         }
@@ -29,5 +29,5 @@ void run(istream_t * VAs, entry_t * btb) {
         //printf("%d\n",btb_index(instr).index);
         //printf("%d\n",btb_index(instr).tag);
     }
-    printf("%f\n",(1-mispreds/(branches+0.0)));
+    printf("Accuracy: %f\n",(1-mispreds/(branches+0.0)));
 }
