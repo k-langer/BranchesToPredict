@@ -1,0 +1,7 @@
+branch_pred  
+    Trace based simulator for x86 branch predicition
+gen_trace  
+    Generate traces from any program    
+m2s
+    Verify results with x86 uArch simulator
+

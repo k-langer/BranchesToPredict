@@ -1,3 +1,28 @@
-Real branch predictors work on a window of fetch data.
+make 
+make run 
 
-For each fetch window it is important that we can sucessfully fetch the next window, sequential or jumped. We do this by storing branch targets and jumping to them based on history. I think I am going to do one BTB entry per fetch window and up to two branches per fetch window. Compilers pad branch targets with NOPs right? That is the sensible way to achieve high fetch bandwith, but regardless. TODO, explore >2 branches per window...
+Trace based branch predictior simulation 
+
+The trace of any program is run through the machine. The simulator makes x86 assumptions. Regardless, when a branch is encountered it is looked up in the Branch Target Buffer (BTB) on a fetch window granularity. A prediction window is 64B. 
+
+x86 is a variable length instruction set. To avoid looking up every possible virtual address and predicting on every possible byte, it is almost required that a window is choosen. I choose a 64B window as it is a common fetch size for processors from the last decade. 
+
+The BTB is looked up by VA. The Virtual Address (VA) bits used are [log2(sz)+6:6]. We do not use the offset in the window as an index. The remaining bits of the VA are stored as tag. Eventually, a better hash function should be choosen by experimentation. The BTB is currently direct mapped. 
+
+The BTB, as a result, cannot predict more than a single taken branch per window. This may be a problem if the window is too big. More than one taken branch, basically many near branches, break the window. I made the assumption that compilers pad branch targets with NOPs, but that doesn't seem to be true. Likely need to support multiple branches per window with multiple offsets. 
+
+The BTB supports a 2 bit saturating counter for direction prediction. 
+
+Just some fun facts about Dhrystone: 
+Not Taken accuracy: ~36%
+Taken accuracy with 32 entry BTB and 1B prediction window: ~47%
+Taken accuracy with 1k entry BTB and 8B prediction window: ~52%
+Taken accuracy with 1k entry BTB and 2B prediction window: ~74%
+Taken accuracy with 1k entry BTB and 1B prediction window: ~88% 
+
+Clearly there are a lot of branches packed into 8B of code... a good solution would be to start a 64B window only at branch targets and hash together lower bits too.
+
+Pitfalls 
+    * It is impossible for trace based simulators to see the effects of training latency on predicition accuracy 
+    * It is impossible for trace based simulators to see the effects of bad path on BTB state
+

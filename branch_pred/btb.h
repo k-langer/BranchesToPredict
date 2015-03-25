@@ -4,12 +4,12 @@
 #include<stdlib.h>
 #include"readva.h"
 #include "math.h"
-#define PREDWIND 6
+#define PREDWIND 4
 #define TRUE 1
 #define FALSE 0 
 typedef struct entry {
     unsigned char val;
-    int index;
+    //int index;
     int offset;  
     unsigned long long target; 
     int counter; 
@@ -42,6 +42,7 @@ unsigned long long btb_nextPc(entry_t * btb, istream_t instr);
 unsigned long long btb_genTarget(unsigned long long tag, 
     unsigned long long index, unsigned long long offset);
 void btb_printDebug();
+void btb_trainCounter(entry_t * btb, btb_index_t idx, unsigned char dir);
 
 static inline unsigned int ilog2(const unsigned int x) {
   unsigned int y;
