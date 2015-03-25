@@ -44,11 +44,12 @@ unsigned long long btb_nextPc(entry_t * btb, istream_t instr) {
     index = idx.index;
     pc_tag = btb_genTarget(tag,index,offset);
     unsigned char match = btb[idx.index].val;
-    match &= (instr.pc == pc_tag); 
-    //printf("%s %llx %llx\n",instr.instr,instr.pc,pc_tag);
+    match &= ( idx.tag == tag); 
+    match &= (idx.offset == offset); 
     if (match) {
         //printf("%s\n",btb[idx.index].DEBUG_INSTR);
         //printf("BTB HIT %llx\n",btb[idx.index].target);
+//        if (btb[idx.index].counter >= 2)
         return btb[idx.index].target;
     }
     return nextSeq;
@@ -67,21 +68,44 @@ void btb_train(entry_t * btb, btb_index_t idx, unsigned long long target, char *
     //printf("Target %llx %llx\n",old,tag_match);
     btb_index_t tgt_idx = btb_index(target);
     entry_t * btbEntry = &btb[idx.index];
-    if (idx.index == tgt_idx.index) { return; }
+    btbEntry->val = TRUE;
+    if (idx.index == tgt_idx.index
+     && idx.tag   == tgt_idx.tag ) { 
+        return; 
+    }   
+    if (btbEntry->target != target) {
+        btb_state.evictions++;
+        //long long pc = btb_genTarget(idx.tag,idx.index,idx.offset);
+        //printf("%llx %s %d %d\n",pc,instr,idx.index,btb_state.evictions);
+    }
     btbEntry->target = target; 
     btbEntry->tag = idx.tag;
     btbEntry->offset = idx.offset; 
-    btbEntry->val = TRUE;
+    btbEntry->counter = 1;
     btbEntry->DEBUG_INSTR = instr;
+}
+void btb_trainCounter(entry_t * btb, btb_index_t idx, unsigned char dir) {
+    entry_t * btbEntry = &btb[idx.index];
+    if (btbEntry->val && idx.offset == btbEntry->offset && idx.tag == btbEntry->tag) { 
+    } else {return;}
+    if (dir != 0) {
+       //NOT TAKEN
+        btbEntry->counter = btbEntry->counter > 0 ? 
+            btbEntry->counter-1 : 0;
+    } else {
+        //TAKEN
+        btbEntry->counter = btbEntry->counter < 3 ? 
+            btbEntry->counter+1 : 3;
+    }
 }
 void btb_printDebug() {
     if (btb_state.sz <= 0) { return; } 
     for (int i = 0; i < pow(2,btb_state.sz); i++) {
         entry_t entry = btb_state.entries[i];
         unsigned long long address = btb_genTarget( 
-            entry.tag, entry.index, entry.offset);  
+            entry.tag, i, entry.offset);  
         if(!entry.val) { continue; }
-        printf("%d Name: %s Target: 0x%llx Address: 0x%llx\n", i,
-            entry.DEBUG_INSTR, entry.target, address);
+        printf("%d Name: %s Target: 0x%llx Address: 0x%llx Counter: %d\n", i,
+            entry.DEBUG_INSTR, entry.target, address, entry.counter);
     }
 }

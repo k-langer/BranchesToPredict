@@ -1,0 +1,8 @@
+make 
+make run 
+
+This generates a trace of any program that is compiled with GDB debugging flags. It does not matter if it is statically compiled. The trace contains:
+    * Instruction Address 
+    * Instruction 
+    * Instruction length 
+This is suitable to do trace based simulation. It will generate a trace for any architecture that has a toolchain. 
