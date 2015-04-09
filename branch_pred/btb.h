@@ -4,9 +4,9 @@
 #include<stdlib.h>
 #include"readva.h"
 #include "math.h"
-#define PREDWIND 4
-#define TRUE 1
-#define FALSE 0 
+#define PREDWIND 3
+#define TRUE 1LL
+#define FALSE 0LL
 typedef struct entry {
     unsigned char val;
     //int index;
@@ -18,6 +18,7 @@ typedef struct entry {
 } entry_t;
 typedef struct btb_index {
     unsigned long long index;
+    unsigned long long hashIndex; 
     unsigned long long offset;  
     unsigned long long tag; 
 } btb_index_t; 
@@ -44,7 +45,7 @@ unsigned long long btb_genTarget(unsigned long long tag,
 void btb_printDebug();
 void btb_trainCounter(entry_t * btb, btb_index_t idx, unsigned char dir);
 
-static inline unsigned int ilog2(const unsigned int x) {
+static inline unsigned long long ilog2(const unsigned int x) {
   unsigned int y;
   asm ( "\tbsr %1, %0\n"
       : "=r"(y)

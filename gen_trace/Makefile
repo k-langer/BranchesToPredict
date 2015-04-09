@@ -1,4 +1,4 @@
-CC=gcc -m32
+CC=gcc 
 CFLAGS=-std=gnu99 -Wno-unused-result -lm
 WARNING=-Wall 
 DEBUG=-g -O0
@@ -11,7 +11,7 @@ all: $(TARGET)
 	$(CC) -c $(CFLAGS) $(WARNING) $(DEBUG) $^ -o $@
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(DEBUG)
+	$(CC) -o $@ $^ -static $(CFLAGS) $(DEBUG)
 
 run: 
 	gdb -batch -q -x instr_length.py -x run.gdb RunTrace 2> /dev/null | \
