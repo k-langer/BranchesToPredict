@@ -55,7 +55,7 @@ unsigned long long btb_nextPc(entry_t * btb, istream_t instr) {
     if (match) {
         //printf("%s\n",btb[idx.index].DEBUG_INSTR);
         //printf("BTB HIT %llx\n",btb[idx.index].target);
-        if (btb[idx.index].counter >= 2)
+        //if (btb[idx.index].counter >= 2)
         return btb[idx.hashIndex].target;
     }
     return nextSeq;

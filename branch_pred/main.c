@@ -8,7 +8,7 @@ int main() {
     FILE *inFilePtr = fopen(inFileString, "r");
     istream_t * VAs = readimem(inFilePtr); 
 
-    entry_t * btb = btb_init(6);
+    entry_t * btb = btb_init(10);
     run(VAs,btb);    
     //btb_printDebug();
     return 0;

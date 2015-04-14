@@ -15,7 +15,8 @@ istream_t * readimem(FILE *inFilePtr) {
         if (i != prevpc) { tlen = len; }
         nxt->nxtSeq = i + tlen;  
         if (!feof(inFilePtr) && i == prevpc) { continue; }
-        prevpc = i; 
+        prevpc = i;
+        //TODO: This really should be a as needed buffer to save RAM 
         nxt->instr = malloc(strlen(str));
         memcpy(nxt->instr, str, strlen(str));
         if (!feof(inFilePtr))  {
