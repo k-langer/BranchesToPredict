@@ -1,423 +1,339 @@
-#define LOOPS	10000		/* Use this for faster machines */
-
-/* Compiler dependent options */
-#undef	NOENUM			/* Define if compiler has no enum's */
-#undef	NOSTRUCTASSIGN		/* Define if compiler can't assign structures */
-
-/* define only one of the next three defines */
-/*#define GETRUSAGE		/* Use getrusage(2) time function */
-/*#define TIMES			/* Use times(2) time function */
-/*#define TIME			/* Use time(2) time function */
-
-/* define the granularity of your times(2) function (when used) */
-/*#define HZ	60		/* times(2) returns 1/60 second (most) */
-/*#define HZ	100		/* times(2) returns 1/100 second (WECo) */
-
-/* for compatibility with goofed up version */
-/*#define GOOF			/* Define if you want the goofed up version */
-
-#ifdef GOOF
-char	Version[] = "1.0";
-#else
-char	Version[] = "1.1";
-#endif
-
-#ifdef	NOSTRUCTASSIGN
-#define	structassign(d, s)	memcpy(&(d), &(s), sizeof(d))
-#else
-#define	structassign(d, s)	d = s
-#endif
-
-#ifdef	NOENUM
-#define	Ident1	1
-#define	Ident2	2
-#define	Ident3	3
-#define	Ident4	4
-#define	Ident5	5
-typedef int	Enumeration;
-#else
-typedef enum	{Ident1, Ident2, Ident3, Ident4, Ident5} Enumeration;
-#endif
-
-typedef int	OneToThirty;
-typedef int	OneToFifty;
-typedef char	CapitalLetter;
-typedef char	String30[31];
-typedef int	Array1Dim[51];
-typedef int	Array2Dim[51][51];
-
-struct	Record
-{
-	struct Record		*PtrComp;
-	Enumeration		Discr;
-	Enumeration		EnumComp;
-	OneToFifty		IntComp;
-	String30		StringComp;
-};
-
-typedef struct Record 	RecordType;
-typedef RecordType *	RecordPtr;
-typedef int		boolean;
-
-#define	NULL		0
-#define	TRUE		1
-#define	FALSE		0
-
-#ifndef REG
-#define	REG
-#endif
-
-extern Enumeration	Func1();
-extern boolean		Func2();
-
-#ifdef TIMES
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/times.h>
-#endif
-#ifdef GETRUSAGE
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
-main()
-{
-	Proc0();
-	exit(0);
-}
-
 /*
- * Package 1
- */
-int		IntGlob;
-boolean		BoolGlob;
-char		Char1Glob;
-char		Char2Glob;
-Array1Dim	Array1Glob;
-Array2Dim	Array2Glob;
-RecordPtr	PtrGlb;
-RecordPtr	PtrGlbNext;
-
-Proc0()
-{
-	OneToFifty		IntLoc1;
-	REG OneToFifty		IntLoc2;
-	OneToFifty		IntLoc3;
-	REG char		CharLoc;
-	REG char		CharIndex;
-	Enumeration	 	EnumLoc;
-	String30		String1Loc;
-	String30		String2Loc;
-	extern char		*malloc();
-
-	register unsigned int	i;
-#ifdef TIME
-	long			time();
-	long			starttime;
-	long			benchtime;
-	long			nulltime;
-
-	starttime = time( (long *) 0);
-	for (i = 0; i < LOOPS; ++i);
-	nulltime = time( (long *) 0) - starttime; /* Computes o'head of loop */
+** queens.c -- Find solutions to the Eight-Queens chess problem.
+** Roberto Sierra 3/19/84 Version 1.1
+**
+** Description:
+** This program finds all the possible ways that N queens can
+** be placed on an NxN chessboard so that the queens cannot
+** capture one another -- that is, so that no rank, file or
+** diagonal is occupied by more than one queen. By default,
+** the program prints the first solution it finds. You can
+** use the -a option to print all solutions, or the -c option
+** just to count them. The program allows the chess board
+** to be from 1x1 (trivial case) to 100x100. Warning: the
+** larger the chess board, the longer it typically takes to
+** find each solution, even though there may be more of them.
+**
+** This is a terrific example of the utility of recursion. The
+** algorithm uses recursion to drastically limit the number
+** of board positions that are tested. The program is able
+** to find all 8x8 queen solutions in a fraction of a second
+** (not counting print time). The code makes no attempt to
+** eliminate symmetrical solutions, so the number of solutions
+** reported will always be higher than the actual number of
+** distinct solutions.
+**
+**
+** Usage:
+** queens [-ac] n
+**
+** n Number of queens (rows and columns). An integer from 1 to 100.
+** -a Find and print all solutions.
+** -c Count all solutions, but do not print them.
+**
+** The output is sent to stdout. All errors messages are
+** sent to stderr. If a problem arises, the return code is -1.
+**
+**
+** Examples:
+**
+** queens 8 ## Show an 8x8 solution
+** 8 queens on a 8x8 board...
+** Q - - - - - - -
+** - - - - Q - - -
+** - - - - - - - Q
+** - - - - - Q - -
+** - - Q - - - - -
+** - - - - - - Q -
+** - Q - - - - - -
+** - - - Q - - - -
+**
+** queens -c 8 ## Count all 8x8 solutions
+** 8 queens on a 8x8 board...
+** ...there are 92 solutions.
+**
+** queens -a 4 ## Show all 4x4 solutions
+** 4 queens on a 4x4 board...
+**
+** Solution #1:
+** - Q - -
+** - - - Q
+** Q - - -
+** - - Q -
+**
+** Solution #2:
+** - - Q -
+** Q - - -
+** - - - Q
+** - Q - -
+**
+** ...there are 2 solutions.
+**
+**
+** Build Instructions:
+** You'll need an ANSI C compiler (or the willingness to edit
+** the program a bit). If you've got Gnu C, then you can
+** compile and load the program as follows:
+**
+** gcc queens.c -ansi -o queens
+**
+** [If you're using MPW on the Mac, define '-d MPW' on the
+** compile line so that background processing will occur.]
+**
+**
+** Algorithm:
+** In a 1984 Byte article, I ran across an interesting letter
+** from a high school student who was attempting to solve the
+** Eight Queens problem using a BASIC interpreter. He had
+** developed a program which placed eight queens successively
+** on all sixty-four squares, testing for conflicts at each
+** iteration. Of course, such a program would require 64^8
+** iterations (about 2.8x10^14 iterations). Even in C on a,
+** fast CPU, this could take months or years. Byte's answer was
+** to alter the loops so that the queens resided on separate
+** ranks, thereby reducing the number of iterations required
+** to find all solutions to 8^8 iterations (about 16 million).
+** More reasonable, but still requiring a chunk of CPU time.
+**
+** I puzzled about this problem a bit, and came to realize that
+** this was still wasting a lot of CPU cycles. Though I'm sure
+** others have come up with good algorithms, I decided to come
+** up with my own, with a particular eye on efficiency. The
+** resulting algorithm finds all 8x8 solutions in a fraction
+** of a second (there are 92 solutions, including rotations).
+** On a Sun 4, it'll find all 365,596 solutions on a 14x14 board
+** in a bit over 2 minutes (printing them out requires extra
+** time, of course). Even Byte's solution would require 14^14
+** iterations (about 10^16) which would take aeons.
+**
+** My algorithm works as follows:
+** (1) Place a queen in the top left corner.
+** (2) Place another queen immediately below.
+** (3) Test for conflicts. If the second queen conflicts (it
+** does at first), then move it one square to the right.
+** (4) Loop step 3 until there are no conflicts. Place
+** the next queen on the board and recurse.
+** (5) If any queen reaches the right edge of the board,
+** remove it and 'pop' to the previous recursion level.
+** (6) Now repeat these steps recursively until all eight
+** queens (or however many) have been placed without
+** conflict -- the result is a solution to the problem,
+** which is counted and optionally printed.
+**
+** Because conflicts are tested as the recursion proceeds,
+** this has the effect of 'pruning' the recursion so that
+** a large number of board positions are not even attempted.
+** The result is that the algorithm runs in reasonable time.
+**
+** I used a few tricks to make the test-for-conflict code
+** extremely efficient -- there is no 'inner' loop to search
+** along ranks, files, or diagonals. A series of arrays are
+** maintained instead which indicate which queen currently
+** 'owns' each rank, file or diagonal. This makes the
+** algorithm really fly, though the code is a little hard to
+** read. Lastly, pointer arithmetic is used to reduce the
+** number of implicit multiplications used in array addressing.
+**
+**
+** Contact:
+** For queries regarding this program, contact Roberto Sierra
+** at any of the following addresses:
+**
+** Roberto Sierra
+** bert@netcom.com (preferred address)
+** 73557.2101@compuserve.com
+**
+** Tempered MicroDesigns
+** P.O. Box 170638
+** San Francisco, CA 94117
+**
+**
+** Fine Print:
+** This program is in the public domain and can be used for
+** any purpose whatsoever, including commercial application.
+** [I'd like to hear what you do with it, though.]
+** Absolutely no warranty or liability is implied or extended
+** by the author.
+**
+**
+** Modification History:
+** PRS 3/19/84 v1.0 -- Original version.
+** PRS 7/25/93 v1.1 -- ANSIfied the code. More efficient pointers.
+*/
+#include <stdio.h>  /* Need standard I/O functions */
+#include <stdlib.h> /* Need exit() routine interface */
+#include <string.h> /* Need strcmp() interface */
+#ifdef  MPW /* Macintosh MPW ONLY */
+# include <CursorCtl.h> /* Need cursor control interfaces */
 #endif
-#ifdef TIMES
-	time_t			starttime;
-	time_t			benchtime;
-	time_t			nulltime;
-	struct tms		tms;
-
-	times(&tms); starttime = tms.tms_utime;
-	for (i = 0; i < LOOPS; ++i);
-	times(&tms);
-	nulltime = tms.tms_utime - starttime; /* Computes overhead of looping */
+#define MAXQUEENS 100 /* Max number of queens */
+#define MAXRANKS MAXQUEENS /* Max number of ranks (rows) */
+#define MAXFILES MAXQUEENS /* Max number of files (columns) */
+#define MAXDIAGS (MAXRANKS+MAXFILES-1)  /* Max number of diagonals */
+#define EMPTY (MAXQUEENS+1) /* Marks unoccupied file or diagonal */
+/* GLOBAL VARIABLES */
+int queens; /* Number of queens to place */
+int ranks;  /* Number of ranks (rows) */
+int files;  /* Number of files (columns) */
+int printing = 1;   /* TRUE if printing positions */
+int findall = 0;    /* TRUE if finding all solutions */
+unsigned long solutions = 0;    /* Number of solutions found */
+int queen[MAXRANKS];    /* File on which each queen is located */
+int file[MAXFILES]; /* Which queen 'owns' each file */
+int fordiag[MAXDIAGS];  /* Which queen 'owns' forward diagonals */
+int bakdiag[MAXDIAGS];  /* Which queen 'owns' reverse diagonals */
+char *progname = NULL;  /* The name of this program */
+/* -------------------------- PROTOTYPES ----------------------- */
+void pboard(void);
+void find(register int level);
+/*-------------------------- main() ----------------------------
+** MAIN program. The main purpose of this routine is to deal
+** with decoding the command line arguments, initializing the
+** various arrays, and starting the recursive search routine.
+*/
+int main(int argc, char **argv)
+{
+register int i; /* Loop variable */
+register char *p;   /* Ptr to argument */
+char *usage =
+"Usage: %s [-ac] n\n\
+\tn\tNumber of queens (rows and columns). An integer from 1 to 100.\n\
+\t-a\tFind and print all solutions.\n\
+\t-c\tCount all solutions, but do not print them.\n";
+#ifdef  MPW /* Macintosh MPW ONLY */
+InitCursorCtl(0);   /* Enable cursor control */
 #endif
-#ifdef GETRUSAGE
-	struct rusage starttime;
-	struct rusage endtime;
-	struct timeval nulltime;
-
-	getrusage(RUSAGE_SELF, &starttime);
-	for (i = 0; i < LOOPS; ++i);
-	getrusage(RUSAGE_SELF, &endtime);
-	nulltime.tv_sec  = endtime.ru_utime.tv_sec  - starttime.ru_utime.tv_sec;
-	nulltime.tv_usec = endtime.ru_utime.tv_usec - starttime.ru_utime.tv_usec;
+progname = argv[0]; /* Name of the program */
+/**** DECODE COMMAND LINE ARGUMENTS ****/
+printing = 0;
+#ifdef SMALL_PROBLEM_SIZE
+queens = 13;
+#else
+queens = 10;
 #endif
-
-	PtrGlbNext = (RecordPtr) malloc(sizeof(RecordType));
-	PtrGlb = (RecordPtr) malloc(sizeof(RecordType));
-	PtrGlb->PtrComp = PtrGlbNext;
-	PtrGlb->Discr = Ident1;
-	PtrGlb->EnumComp = Ident3;
-	PtrGlb->IntComp = 40;
-	strcpy(PtrGlb->StringComp, "DHRYSTONE PROGRAM, SOME STRING");
-#ifndef	GOOF
-	strcpy(String1Loc, "DHRYSTONE PROGRAM, 1'ST STRING");	/*GOOF*/
+findall = 1;
+for(i = 1; i < argc; ++i) { /* Scan through arguments */
+p = argv[i];    /* Ptr to base of argument */
+if(*p == '-') { /* Command line option? */
+while(*++p) {   /* Loop through characters */
+switch(*p) {    /* What is the character */
+case 'c':   /* '-c' option */
+printing = 0;   /* Counting, not printing */
+case 'a':   /* '-a' option */
+findall = 1;    /* Find all solutions */
+break;
+default:    /* Illegal option */
+fprintf(stderr,"%s: Illegal option '%s'\n",progname,argv[i]);
+fprintf(stderr,usage,progname);
+exit(-1);
+}   /* End of switch */
+}   /* End of loop */
+}   /* End of option test */
+else {
+if(sscanf(p,"%d",&queens) != 1) {   /* Read integer argument */
+fprintf(stderr,"%s: Non-integer argument '%s'\n",progname,p);
+exit(-1);
+}
+if(queens <= 0) {   /* N must be positive */
+fprintf(stderr,"%s: n must be positive integer\n",progname);
+exit(-1);
+}
+if(queens > MAXQUEENS) {    /* N can't be too large */
+fprintf(stderr,"%s: Can't have more than %d queens\n",
+progname, MAXQUEENS);
+exit(-1);
+}
+}   /* End of argument test */
+}   /* End of argument scan loop */
+if(!queens) {
+fprintf(stderr,"%s: Missing n argument\n",progname);
+fprintf(stderr,usage,progname);
+exit(-1);
+}
+ranks = files = queens; /* NxN board for N queens */
+printf("%d queen%s on a %dx%d board...\n",
+queens, queens > 1 ? "s" : "", ranks, files);
+fflush(stdout);
+/* Initialization */
+solutions = 0;  /* No solutions yet */
+for(i = 0; i < MAXFILES; ++i) file[i] = EMPTY;
+for(i = 0; i < MAXDIAGS; ++i) fordiag[i] = bakdiag[i] = EMPTY;
+/* Find all solutions (begin recursion) */
+find(0);
+if(printing && solutions) putchar('\n');
+/* Report results */
+if(solutions == 1) printf("...there is 1 solution\n");
+else printf("...there are %ld solutions\n", solutions);
+exit(0);    /* No errors */
+}
+/***********************/
+/**** ROUTINES ****/
+/***********************/
+/*------------------------- pboard() ---------------------------
+** This routines prints the board for a particular solution.
+** The output is sent to stdout.
+*/
+void pboard(void)
+{
+register int i, j;  /* Rank/File indices */
+if(findall) /* Only if searching for all */
+printf("\nSolution #%lu:\n",solutions); /* Print solution number */
+for(i = 0; i < ranks; ++i) {    /* Loop through all ranks */
+for(j = 0; j < files; ++j) {    /* Loop through all files */
+putchar(' ');   /* Output a space */
+if(j == queen[i]) putchar('Q'); /* Output Q for queen... */
+else putchar('-');  /* or '-' if empty */
+}
+putchar('\n');  /* Break line */
+}
+fflush(stdout); /* Flush solution to output */
+}
+/*-------------------------- find() ----------------------------
+** FIND is the recursive heart of the program, and finds all
+** solutions given a set of level-1 fixed queen positions.
+** The routine moves a single queen through all files (columns)
+** at the current rank (recursion level). As the queen is moved,
+** conflict tests are made. If the queen can be placed without
+** conflict, then the routine recurses to the next level. When
+** all queens have been placed without conflict, a solution is
+** counted and reported.
+*/
+void find(register int level)
+{
+register int f; /* Indexes through files */
+register int *fp, *fdp, *bdp;   /* Ptrs to file/diagonal entries */
+#ifdef  MPW /* Macintosh MPW ONLY */
+if(level & 7 == 0)  /* Periodically break for... */
+SpinCursor(1);  /* background processing */
 #endif
-	Array2Glob[8][7] = 10;	/* Was missing in published program */
-
-/*****************
--- Start Timer --
-*****************/
-#ifdef TIME
-	starttime = time( (long *) 0);
+if(level == queens) {   /* Placed all queens? Stop. */
+++solutions;    /* This is a solution! */
+if(printing) pboard();  /* Print board if printing */
+if(!findall) exit(0);   /* May stop after first solution */
+#ifdef  MPW /* Macintosh MPW ONLY */
+SpinCursor(1);  /* background processing */
 #endif
-#ifdef TIMES
-	times(&tms); starttime = tms.tms_utime;
-#endif
-#ifdef GETRUSAGE
-	getrusage (RUSAGE_SELF, &starttime);
-#endif
-	for (i = 0; i < LOOPS; ++i)
-	{
-
-		Proc5();
-		Proc4();
-		IntLoc1 = 2;
-		IntLoc2 = 3;
-		strcpy(String2Loc, "DHRYSTONE PROGRAM, 2'ND STRING");
-		EnumLoc = Ident2;
-		BoolGlob = ! Func2(String1Loc, String2Loc);
-		while (IntLoc1 < IntLoc2)
-		{
-			IntLoc3 = 5 * IntLoc1 - IntLoc2;
-			Proc7(IntLoc1, IntLoc2, &IntLoc3);
-			++IntLoc1;
-		}
-		Proc8(Array1Glob, Array2Glob, IntLoc1, IntLoc3);
-		Proc1(PtrGlb);
-		for (CharIndex = 'A'; CharIndex <= Char2Glob; ++CharIndex)
-			if (EnumLoc == Func1(CharIndex, 'C'))
-				Proc6(Ident1, &EnumLoc);
-		IntLoc3 = IntLoc2 * IntLoc1;
-		IntLoc2 = IntLoc3 / IntLoc1;
-		IntLoc2 = 7 * (IntLoc3 - IntLoc2) - IntLoc1;
-		Proc2(&IntLoc1);
-	}
-
-/*****************
--- Stop Timer --
-*****************/
-
-#ifdef TIME
-	benchtime = time( (long *) 0) - starttime - nulltime;
-	printf("Dhrystone(%s) time for %ld passes = %ld\n",
-		Version,
-		(long) LOOPS, benchtime);
-	printf("This machine benchmarks at %ld dhrystones/second\n",
-		((long) LOOPS) / benchtime);
-#endif
-#ifdef TIMES
-	times(&tms);
-	benchtime = tms.tms_utime - starttime - nulltime;
-	printf("Dhrystone(%s) time for %ld passes = %ld\n",
-		Version,
-		(long) LOOPS, benchtime/HZ);
-	printf("This machine benchmarks at %ld dhrystones/second\n",
-		((long) LOOPS) * HZ / benchtime);
-#endif
-#ifdef GETRUSAGE
-	getrusage(RUSAGE_SELF, &endtime);
-	{
-	    double t = (double)(endtime.ru_utime.tv_sec
-				- starttime.ru_utime.tv_sec
-				- nulltime.tv_sec)
-		     + (double)(endtime.ru_utime.tv_usec
-				- starttime.ru_utime.tv_usec
-				- nulltime.tv_usec) * 1e-6;
-	    printf("Dhrystone(%s) time for %ld passes = %.1f\n",
-		   Version,
-		   (long)LOOPS,
-		   t);
-	    printf("This machine benchmarks at %.0f dhrystones/second\n",
-		   (double)LOOPS / t);
-	}
-#endif
-
 }
-
-Proc1(PtrParIn)
-REG RecordPtr	PtrParIn;
-{
-#define	NextRecord	(*(PtrParIn->PtrComp))
-
-	structassign(NextRecord, *PtrGlb);
-	PtrParIn->IntComp = 5;
-	NextRecord.IntComp = PtrParIn->IntComp;
-	NextRecord.PtrComp = PtrParIn->PtrComp;
-	Proc3(NextRecord.PtrComp);
-	if (NextRecord.Discr == Ident1)
-	{
-		NextRecord.IntComp = 6;
-		Proc6(PtrParIn->EnumComp, &NextRecord.EnumComp);
-		NextRecord.PtrComp = PtrGlb->PtrComp;
-		Proc7(NextRecord.IntComp, 10, &NextRecord.IntComp);
-	}
-	else
-		structassign(*PtrParIn, NextRecord);
-
-#undef	NextRecord
+else {  /* Not at final level yet */
+for(    /* Move queen through all files */
+f = 0,  /* Queen starts at left (file 0) */
+fp = file,  /* Ptr to base of file array */
+fdp = &fordiag[level],  /* Ptr to first fwd diag entry */
+bdp = &bakdiag[level+files-1]   /* Ptr to first bak diag entry */
+;
+f < files /* Loop through all files */
+;
+++f,    /* Advance index */
+++fp, ++fdp, --bdp /* Advance pointers */
+) {
+if(*fp >= level && /* No queen on the file? */
+*fdp >= level && *bdp >= level /* No queens on diagonals? */
+) {
+queen[level] = f;   /* Note new position of queen */
+*fp = *fdp = *bdp = level;  /* Place queen on file & diags */
+find(level+1);  /* This level OK, recurse to next */
+*fp = *fdp = *bdp = EMPTY;  /* Remove queen from file & diags */
+}   /* End of conflict test */
+}   /* End of file loop */
+}   /* End if (level == queens) */
 }
-
-Proc2(IntParIO)
-OneToFifty	*IntParIO;
-{
-	REG OneToFifty		IntLoc;
-	REG Enumeration		EnumLoc;
-
-	IntLoc = *IntParIO + 10;
-	for(;;)
-	{
-		if (Char1Glob == 'A')
-		{
-			--IntLoc;
-			*IntParIO = IntLoc - IntGlob;
-			EnumLoc = Ident1;
-		}
-		if (EnumLoc == Ident1)
-			break;
-	}
-}
-
-Proc3(PtrParOut)
-RecordPtr	*PtrParOut;
-{
-	if (PtrGlb != NULL)
-		*PtrParOut = PtrGlb->PtrComp;
-	else
-		IntGlob = 100;
-	Proc7(10, IntGlob, &PtrGlb->IntComp);
-}
-
-Proc4()
-{
-	REG boolean	BoolLoc;
-
-	BoolLoc = Char1Glob == 'A';
-	BoolLoc |= BoolGlob;
-	Char2Glob = 'B';
-}
-
-Proc5()
-{
-	Char1Glob = 'A';
-	BoolGlob = FALSE;
-}
-
-extern boolean Func3();
-
-Proc6(EnumParIn, EnumParOut)
-REG Enumeration	EnumParIn;
-REG Enumeration	*EnumParOut;
-{
-	*EnumParOut = EnumParIn;
-	if (! Func3(EnumParIn) )
-		*EnumParOut = Ident4;
-	switch (EnumParIn)
-	{
-	case Ident1:	*EnumParOut = Ident1; break;
-	case Ident2:	if (IntGlob > 100) *EnumParOut = Ident1;
-			else *EnumParOut = Ident4;
-			break;
-	case Ident3:	*EnumParOut = Ident2; break;
-	case Ident4:	break;
-	case Ident5:	*EnumParOut = Ident3;
-	}
-}
-
-Proc7(IntParI1, IntParI2, IntParOut)
-OneToFifty	IntParI1;
-OneToFifty	IntParI2;
-OneToFifty	*IntParOut;
-{
-	REG OneToFifty	IntLoc;
-
-	IntLoc = IntParI1 + 2;
-	*IntParOut = IntParI2 + IntLoc;
-}
-
-Proc8(Array1Par, Array2Par, IntParI1, IntParI2)
-Array1Dim	Array1Par;
-Array2Dim	Array2Par;
-OneToFifty	IntParI1;
-OneToFifty	IntParI2;
-{
-	REG OneToFifty	IntLoc;
-	REG OneToFifty	IntIndex;
-
-	IntLoc = IntParI1 + 5;
-	Array1Par[IntLoc] = IntParI2;
-	Array1Par[IntLoc+1] = Array1Par[IntLoc];
-	Array1Par[IntLoc+30] = IntLoc;
-	for (IntIndex = IntLoc; IntIndex <= (IntLoc+1); ++IntIndex)
-		Array2Par[IntLoc][IntIndex] = IntLoc;
-	++Array2Par[IntLoc][IntLoc-1];
-	Array2Par[IntLoc+20][IntLoc] = Array1Par[IntLoc];
-	IntGlob = 5;
-}
-
-Enumeration Func1(CharPar1, CharPar2)
-CapitalLetter	CharPar1;
-CapitalLetter	CharPar2;
-{
-	REG CapitalLetter	CharLoc1;
-	REG CapitalLetter	CharLoc2;
-
-	CharLoc1 = CharPar1;
-	CharLoc2 = CharLoc1;
-	if (CharLoc2 != CharPar2)
-		return (Ident1);
-	else
-		return (Ident2);
-}
-
-boolean Func2(StrParI1, StrParI2)
-String30	StrParI1;
-String30	StrParI2;
-{
-	REG OneToThirty		IntLoc;
-	REG CapitalLetter	CharLoc;
-
-	IntLoc = 1;
-	while (IntLoc <= 1)
-		if (Func1(StrParI1[IntLoc], StrParI2[IntLoc+1]) == Ident1)
-		{
-			CharLoc = 'A';
-			++IntLoc;
-		}
-	if (CharLoc >= 'W' && CharLoc <= 'Z')
-		IntLoc = 7;
-	if (CharLoc == 'X')
-		return(TRUE);
-	else
-	{
-		if (strcmp(StrParI1, StrParI2) > 0)
-		{
-			IntLoc += 7;
-			return (TRUE);
-		}
-		else
-			return (FALSE);
-	}
-}
-
-boolean Func3(EnumParIn)
-REG Enumeration	EnumParIn;
-{
-	REG Enumeration	EnumLoc;
-
-	EnumLoc = EnumParIn;
-	if (EnumLoc == Ident3) return (TRUE);
-	return (FALSE);
-}
-
-#ifdef	NOSTRUCTASSIGN
-memcpy(d, s, l)
-register char	*d;
-register char	*s;
-register int	l;
-{
-	while (l--) *d++ = *s++;
-}
-#endif
-/* ---------- */

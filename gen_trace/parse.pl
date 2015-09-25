@@ -12,7 +12,9 @@ while (my $line = <>) {
             $out =  "$1   $2";
         }
         if ($line =~ /\s=\s(\d+)/) {    
+            if ($1 > 0) {
             print "$out   $1\n";
+            }
         }
     } 
 }
