@@ -1,0 +1,26 @@
+The simulator needs to be rewritten. It was a good first start but I made it difficult to fix. 
+
+Things it needs to do natively: 
+
+Provide predictions on a fixed window.
+
+Each cycle the predictor will look at a 64B block and produce a prediction. 
+  Need to allow start point to be factored into that prediction 
+  Likely need to have a BTB indexed by configurable hash of start and VA information 
+  
+Need to structure the BTB so that wayness and replacement can be handled natively. 
+  Meta-meta BTB ptr. Meta BTB with a list of pointers and replacement info. Entry with contents and tags
+Want size to be paramaterized, also wayness
+
+Provide a way to add conditional predictor easily
+
+How about return stack? Looping patterns? Indirects? 
+
+Things not to hard code:
+  Entrys
+  Ways
+  Tag compare size
+  LRU
+  Last level BTB
+  indexing 
+  Window size
