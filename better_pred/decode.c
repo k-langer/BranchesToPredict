@@ -28,13 +28,24 @@ bool decode_branchMissed(istream_t * previnstr, unsigned long long pc) {
     int len = previnstr->ilen; 
     return !( (len+predpc) == pc); 
 }
-decode_redirect_t decode_redirectPc(unsigned long long pc, btb_entry_t* entry) {	
-	decode_redirect_t redirect; 
+decode_redirect_t decode_redirectPc(istream_t * misdInstr, btb_entry_t* entry) { 
+	decode_redirect_t redirect;
+    unsigned long long pc = misdInstr->pc; 
+    if ( entry->valid == 0 || (entry->pc > pc) || (entry->pc+entry->endPtr < pc) ) {
+        redirect.valid = 1; 
+        redirect.pc = misdInstr->pc; 
+        redirect.ilen = misdInstr->ilen; 
+        redirect.prevpc= misdInstr->prevpc; 
+        redirect.isBranch = misdInstr->isBranch; 
+        redirect.isTaken = redirect.isBranch && redirect.prevpc+misdInstr->ilen != misdInstr->pc;
+    }
 	return redirect; 
 } 
 unsigned long long decode_NeedPc(unsigned long long pc, btb_entry_t* entry) {
 	unsigned long long updPc;
-	return updPc;
+    if ( !entry || entry->valid == 0 ) { return 0; } 
+    if ( entry->pc+entry->endPtr == pc ) { return entry->target; }
+	return pc;
 } 
 //Faked decoder
 

@@ -12,16 +12,19 @@
 typedef struct metadata {
     int hits; 
     int misses; 
-    int sz;
+    unsigned int sz;
+    unsigned int ways;
     int evictions; 
-    btb_entry_t * entries; 
+    btb_entry_t * entries;
+    unsigned long long instr_counter;  
+    unsigned long long redirect_counter;  
 } metadata_t; 
 
 metadata_t btb_state; 
 btb_entry_t * btb_init(int pwr2_sz, unsigned int ways); 
 
 //unsigned long long btb_read(entry_t * btb, unsigned long long pc); 
-void btb_train(unsigned long long pc, unsigned long long target, decode_redirect_t * redirect); 
+void btb_train(decode_redirect_t * redirect); 
 btb_index_t btb_index(unsigned long long pc); 
 btb_tag_t btb_tag(unsigned long long pc); 
 btb_entry_t btb_read(btb_index_t * idx, btb_tag_t * tag);

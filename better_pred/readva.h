@@ -8,9 +8,11 @@
 typedef struct istream 
 { 
     unsigned long long pc;
-    unsigned long long nxtSeq; 
+    unsigned long long nxtSeq;
+    unsigned long long prevpc;
     char * instr;  
-    int ilen; 
+    int ilen;
+    unsigned char isBranch;  
     struct istream *  next; 
 } istream_t; 
 

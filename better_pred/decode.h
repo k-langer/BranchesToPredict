@@ -16,6 +16,6 @@ const char * branchInstr;
 int decode_lengthDec(char * instr); 
 bool decode_branchFound(char * instr); 
 bool decode_branchMissed(istream_t * previnstr, unsigned long long pc);
-decode_redirect_t decode_redirectPc(unsigned long long pc, btb_entry_t* entry); 
+decode_redirect_t decode_redirectPc(istream_t * misdInstr, btb_entry_t* entry); 
 unsigned long long decode_NeedPc(unsigned long long pc, btb_entry_t* entry); 
 #endif
