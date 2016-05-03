@@ -209,7 +209,7 @@ printing = 0;
 #ifdef SMALL_PROBLEM_SIZE
 queens = 13;
 #else
-queens = 10;
+queens = 15;
 #endif
 findall = 1;
 for(i = 1; i < argc; ++i) { /* Scan through arguments */
